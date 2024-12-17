@@ -1,5 +1,5 @@
 #
-# Copyright © 2021 Peter M. Stahl pemistahl@gmail.com
+# Copyright © 2021-present Peter M. Stahl pemistahl@gmail.com
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,9 +19,17 @@ on:
   push:
     branches:
       - main
+    paths:
+      - '**.go'
+      - '**.mod'
+      - '**.yml'
   pull_request:
     branches:
       - main
+    paths:
+      - '**.go'
+      - '**.mod'
+      - '**.yml'
 
 jobs:
   build-and-test:
@@ -31,15 +39,15 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Set Up Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v5
         with:
-          go-version: 1.16.x
+          go-version: '1.18'
 
       - name: Store or retrieve Go modules cache
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
@@ -52,6 +60,6 @@ jobs:
         run: go test -coverprofile=coverage.txt -covermode=atomic
 
       - name: Upload code coverage report to Codecov
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v3
         with:
           files: ./coverage.txt

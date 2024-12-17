@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 Peter M. Stahl pemistahl@gmail.com
+ * Copyright © 2021-present Peter M. Stahl pemistahl@gmail.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -115,15 +115,6 @@ func allAlphabets() []alphabet {
 		alphabets[i] = alphabet(i)
 	}
 	return alphabets
-}
-
-func containsAlphabet(alphabets []alphabet, alphabet alphabet) bool {
-	for _, a := range alphabets {
-		if a == alphabet {
-			return true
-		}
-	}
-	return false
 }
 
 var (

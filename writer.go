@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 Peter M. Stahl pemistahl@gmail.com
+ * Copyright © 2021-present Peter M. Stahl pemistahl@gmail.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,9 +21,12 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"github.com/pemistahl/lingua-go/serialization"
+	"google.golang.org/protobuf/proto"
 	"os"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
 )
 
@@ -122,8 +125,9 @@ func CreateAndWriteLanguageModelFiles(
 
 	err = writeCompressedLanguageModel(
 		unigramModel,
+		1,
 		outputDirectoryPath,
-		"unigrams.json",
+		"unigrams.pb.bin",
 	)
 	if err != nil {
 		return err
@@ -131,8 +135,9 @@ func CreateAndWriteLanguageModelFiles(
 
 	err = writeCompressedLanguageModel(
 		bigramModel,
+		2,
 		outputDirectoryPath,
-		"bigrams.json",
+		"bigrams.pb.bin",
 	)
 	if err != nil {
 		return err
@@ -140,8 +145,9 @@ func CreateAndWriteLanguageModelFiles(
 
 	err = writeCompressedLanguageModel(
 		trigramModel,
+		3,
 		outputDirectoryPath,
-		"trigrams.json",
+		"trigrams.pb.bin",
 	)
 	if err != nil {
 		return err
@@ -149,8 +155,9 @@ func CreateAndWriteLanguageModelFiles(
 
 	err = writeCompressedLanguageModel(
 		quadrigramModel,
+		4,
 		outputDirectoryPath,
-		"quadrigrams.json",
+		"quadrigrams.pb.bin",
 	)
 	if err != nil {
 		return err
@@ -158,8 +165,9 @@ func CreateAndWriteLanguageModelFiles(
 
 	err = writeCompressedLanguageModel(
 		fivegramModel,
+		5,
 		outputDirectoryPath,
-		"fivegrams.json",
+		"fivegrams.pb.bin",
 	)
 	if err != nil {
 		return err
@@ -440,9 +448,41 @@ func createLanguageModel(
 
 func writeCompressedLanguageModel(
 	model trainingDataLanguageModel,
+	ngramLength int,
 	outputDirectoryPath string,
 	fileName string,
 ) error {
+	languageName := strings.ToUpper(model.language.String())
+	languageEnumValue := serialization.SerializableLanguage_value[languageName]
+	serializableLanguage := serialization.SerializableLanguage(languageEnumValue)
+
+	probabilitiesToNgrams := make(map[float64][]string)
+	for ngrm, probability := range model.relativeFrequencies {
+		probabilitiesToNgrams[probability] = append(probabilitiesToNgrams[probability], ngrm.value)
+	}
+
+	var ngramSets []*serialization.SerializableNgramSet
+	for probability, ngrams := range probabilitiesToNgrams {
+		sort.Strings(ngrams)
+		ngramSet := serialization.SerializableNgramSet{
+			Probability: probability,
+			Ngrams:      ngrams,
+		}
+		ngramSets = append(ngramSets, &ngramSet)
+	}
+
+	serializableModel := serialization.SerializableLanguageModel{
+		Language:    serializableLanguage,
+		NgramLength: uint32(ngramLength),
+		TotalNgrams: uint32(len(model.relativeFrequencies)),
+		NgramSets:   ngramSets,
+	}
+
+	serializedModel, err := proto.Marshal(&serializableModel)
+	if err != nil {
+		return err
+	}
+
 	zipFileName := fmt.Sprintf("%s.zip", fileName)
 	zipFilePath := filepath.Join(outputDirectoryPath, zipFileName)
 	zipFile, err := os.Create(zipFilePath)
@@ -454,11 +494,11 @@ func writeCompressedLanguageModel(
 	zipWriter := zip.NewWriter(zipFile)
 	defer zipWriter.Close()
 
-	jsonFileWriter, err := zipWriter.Create(fileName)
+	protobufFileWriter, err := zipWriter.Create(fileName)
 	if err != nil {
 		return err
 	}
-	_, err = jsonFileWriter.Write(model.toJson())
+	_, err = protobufFileWriter.Write(serializedModel)
 	if err != nil {
 		return err
 	}

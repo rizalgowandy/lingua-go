@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 Peter M. Stahl pemistahl@gmail.com
+ * Copyright © 2021-present Peter M. Stahl pemistahl@gmail.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,32 +17,19 @@
 package lingua
 
 import (
-	"encoding/json"
 	"fmt"
-	"math/big"
 	"regexp"
-	"sort"
 	"strings"
 )
 
-type languageModel interface {
-	getRelativeFrequency(ngram ngram) float64
-}
-
-type jsonLanguageModel struct {
-	Language Language          `json:"language"`
-	Ngrams   map[string]string `json:"ngrams"`
-}
-
 type trainingDataLanguageModel struct {
-	language                Language
-	absoluteFrequencies     map[ngram]uint32
-	relativeFrequencies     map[ngram]*big.Rat
-	jsonRelativeFrequencies map[ngram]float64
+	language            Language
+	absoluteFrequencies map[ngram]uint32
+	relativeFrequencies map[ngram]float64
 }
 
 type testDataLanguageModel struct {
-	ngrams map[ngram]bool
+	ngrams [][]ngram
 }
 
 func newTrainingDataLanguageModel(
@@ -56,85 +43,38 @@ func newTrainingDataLanguageModel(
 	relativeFrequencies := computeRelativeFrequencies(ngramLength, absoluteFrequencies, lowerNgramAbsoluteFrequencies)
 
 	return trainingDataLanguageModel{
-		language:                language,
-		absoluteFrequencies:     absoluteFrequencies,
-		relativeFrequencies:     relativeFrequencies,
-		jsonRelativeFrequencies: nil,
+		language:            language,
+		absoluteFrequencies: absoluteFrequencies,
+		relativeFrequencies: relativeFrequencies,
 	}
 }
 
-func newTrainingDataLanguageModelFromJson(jsonData []byte) trainingDataLanguageModel {
-	var jsonModel jsonLanguageModel
-	err := json.Unmarshal(jsonData, &jsonModel)
-	if err != nil {
-		panic(err.Error())
-	}
-	jsonRelativeFrequencies := make(map[ngram]float64)
-	for rat, ngrams := range jsonModel.Ngrams {
-		r := new(big.Rat)
-		r.SetString(rat)
-		f, _ := r.Float64()
-		for _, ngram := range strings.Split(ngrams, " ") {
-			jsonRelativeFrequencies[newNgram(ngram)] = f
-		}
-	}
-	return trainingDataLanguageModel{
-		language:                jsonModel.Language,
-		absoluteFrequencies:     nil,
-		relativeFrequencies:     nil,
-		jsonRelativeFrequencies: jsonRelativeFrequencies,
-	}
-}
-
-func (model trainingDataLanguageModel) toJson() []byte {
-	ratsToNgrams := make(map[string]ngramSlice)
-	for ngram, rat := range model.relativeFrequencies {
-		r := rat.String()
-		ratsToNgrams[r] = append(ratsToNgrams[r], ngram)
-	}
-	ratsToJoinedNgrams := make(map[string]string)
-	for rat, ngrams := range ratsToNgrams {
-		sort.Sort(ngrams)
-		var ngramValues []string
-		for _, ngram := range ngrams {
-			ngramValues = append(ngramValues, ngram.value)
-		}
-		ratsToJoinedNgrams[rat] = strings.Join(ngramValues, " ")
-	}
-	jsonModel := jsonLanguageModel{
-		Language: model.language,
-		Ngrams:   ratsToJoinedNgrams,
-	}
-	serializedJsonModel, err := json.Marshal(jsonModel)
-	if err != nil {
-		panic(err.Error())
-	}
-	return serializedJsonModel
-}
-
-func (model trainingDataLanguageModel) getRelativeFrequency(ngram ngram) float64 {
-	if frequency, exists := model.jsonRelativeFrequencies[ngram]; exists {
-		return frequency
-	}
-	return 0
-}
-
-func newTestDataLanguageModel(text string, ngramLength int) testDataLanguageModel {
+func newTestDataLanguageModel(words []string, ngramLength int) testDataLanguageModel {
 	if ngramLength > maxNgramLength {
 		panic(fmt.Sprintf("ngram length %v is greater than %v", ngramLength, maxNgramLength))
 	}
-	ngrams := make(map[ngram]bool)
-	chars := []rune(text)
-	charsCount := len(chars)
-	if charsCount >= ngramLength {
-		for i := 0; i <= charsCount-ngramLength; i++ {
-			slice := string(chars[i : i+ngramLength])
-			if letter.MatchString(slice) {
-				ngrams[newNgram(slice)] = true
+	ngrams := make(map[ngram]struct{})
+
+	for _, word := range words {
+		chars := []rune(word)
+		charsCount := len(chars)
+
+		if charsCount >= ngramLength {
+			for i := 0; i <= charsCount-ngramLength; i++ {
+				slice := string(chars[i : i+ngramLength])
+				ngrams[newNgram(slice)] = struct{}{}
 			}
 		}
 	}
-	return testDataLanguageModel{ngrams: ngrams}
+
+	lowerOrderNgrams := make([][]ngram, len(ngrams))
+	i := 0
+	for n := range ngrams {
+		lowerOrderNgrams[i] = n.rangeOfLowerOrderNgrams()
+		i++
+	}
+
+	return testDataLanguageModel{ngrams: lowerOrderNgrams}
 }
 
 func computeAbsoluteFrequencies(
@@ -163,8 +103,8 @@ func computeRelativeFrequencies(
 	ngramLength int,
 	absoluteFrequencies map[ngram]uint32,
 	lowerNgramAbsoluteFrequencies map[ngram]uint32,
-) map[ngram]*big.Rat {
-	ngramProbabilities := make(map[ngram]*big.Rat)
+) map[ngram]float64 {
+	ngramProbabilities := make(map[ngram]float64, len(absoluteFrequencies))
 	var totalNgramFrequency uint32
 	for _, frequency := range absoluteFrequencies {
 		totalNgramFrequency += frequency
@@ -178,7 +118,7 @@ func computeRelativeFrequencies(
 			slice := string(chars[0 : ngramLength-1])
 			denominator = lowerNgramAbsoluteFrequencies[newNgram(slice)]
 		}
-		ngramProbabilities[ngram] = big.NewRat(int64(frequency), int64(denominator))
+		ngramProbabilities[ngram] = float64(frequency) / float64(denominator)
 	}
 	return ngramProbabilities
 }

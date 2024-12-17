@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 Peter M. Stahl pemistahl@gmail.com
+ * Copyright © 2021-present Peter M. Stahl pemistahl@gmail.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,15 +17,15 @@
 /*
 Package lingua accurately detects the natural language of written text, be it long or short.
 
-What this library does
+# What this library does
 
-Its task is simple: It tells you which language some provided textual data is written in.
+Its task is simple: It tells you which language some text is written in.
 This is very useful as a preprocessing step for linguistic data in natural language
 processing applications such as text classification and spell checking.
 Other use cases, for instance, might include routing e-mails to the right geographically
 located customer service department, based on the e-mails' languages.
 
-Why this library exists
+# Why this library exists
 
 Language detection is often done as part of large machine learning frameworks or natural
 language processing applications. In cases where you don't need the full-fledged
@@ -48,13 +48,13 @@ It draws on both rule-based and statistical methods but does not use any diction
 It does not need a connection to any external API or service either.
 Once the library has been downloaded, it can be used completely offline.
 
-Supported languages
+# Supported languages
 
 Compared to other language detection libraries, Lingua's focus is on quality over quantity,
 that is, getting detection right for a small set of languages first before adding new ones.
 Currently, 75 languages are supported. They are listed as variants of type Language.
 
-How good it is
+# How good it is
 
 Lingua is able to report accuracy statistics for some bundled test data available for each
 supported language. The test data for each language is split into three parts:
@@ -77,15 +77,9 @@ Whatlanggo running over the data of Lingua's supported 75 languages.
 Additionally, I have added Google's CLD3 (https://github.com/google/cld3/) to the comparison
 with the help of the gocld3 bindings (https://github.com/jmhodges/gocld3). Languages that are not
 supported by CLD3 or Whatlanggo are simply ignored during the detection process.
+Lingua clearly outperforms its contenders.
 
-The bar and box plots (https://github.com/pemistahl/lingua-go/blob/main/ACCURACY_PLOTS.md)
-show the measured accuracy values for all three performed tasks: Single word detection,
-word pair detection and sentence detection. Lingua clearly outperforms its contenders.
-Detailed statistics including mean, median and standard deviation values for each language
-and classifier are available in
-tabular form (https://github.com/pemistahl/lingua-go/blob/main/ACCURACY_TABLE.md) as well.
-
-Why it is better than other libraries
+# Why it is better than other libraries
 
 Every language detector uses a probabilistic n-gram (https://en.wikipedia.org/wiki/N-gram)
 model trained on the character distribution in some training corpus. Most libraries only use

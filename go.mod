@@ -1,5 +1,16 @@
 module github.com/pemistahl/lingua-go
 
-go 1.16
+go 1.18
 
-require github.com/stretchr/testify v1.7.0
+require (
+	github.com/shopspring/decimal v1.4.0
+	github.com/stretchr/testify v1.10.0
+	golang.org/x/exp v0.0.0-20221106115401-f9659909a136
+	google.golang.org/protobuf v1.36.0
+)
+
+require (
+	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
+)

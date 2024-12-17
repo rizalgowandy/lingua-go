@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 Peter M. Stahl pemistahl@gmail.com
+ * Copyright © 2021-present Peter M. Stahl pemistahl@gmail.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,15 +16,10 @@
 
 package lingua
 
-import (
-	"encoding/json"
-	"fmt"
-	"strings"
-)
-
-//go:generate stringer -type=Language
 // Language is the type used for enumerating the so far 75 languages which can
 // be detected by Lingua.
+//
+//go:generate stringer -type=Language
 type Language int
 
 const (
@@ -151,25 +146,25 @@ func AllLanguagesWithLatinScript() []Language {
 }
 
 // GetLanguageFromIsoCode639_1 returns the language for the given
-// ISO 639-1 code.
+// ISO 639-1 code enum value.
 func GetLanguageFromIsoCode639_1(isoCode IsoCode639_1) Language {
 	for _, language := range AllLanguages() {
 		if language.IsoCode639_1() == isoCode {
 			return language
 		}
 	}
-	return -1
+	return Unknown
 }
 
 // GetLanguageFromIsoCode639_3 returns the language for the given
-// ISO 639-3 code.
+// ISO 639-3 code enum value.
 func GetLanguageFromIsoCode639_3(isoCode IsoCode639_3) Language {
 	for _, language := range AllLanguages() {
 		if language.IsoCode639_3() == isoCode {
 			return language
 		}
 	}
-	return -1
+	return Unknown
 }
 
 func allLanguagesWithScript(script alphabet) (languages []Language) {
@@ -648,36 +643,4 @@ func (language Language) uniqueCharacters() string {
 	default:
 		return ""
 	}
-}
-
-// MarshalJSON returns a language's JSON representation
-// which is its full name written in uppercase.
-func (language Language) MarshalJSON() ([]byte, error) {
-	return json.Marshal(strings.ToUpper(language.String()))
-}
-
-// UnmarshalJSON converts a language's JSON representation
-// back to its instance of type Language.
-func (language *Language) UnmarshalJSON(bytes []byte) error {
-	var s string
-	if err := json.Unmarshal(bytes, &s); err != nil {
-		return err
-	}
-	for _, l := range AllLanguages() {
-		str := strings.ToUpper(l.String())
-		if str == s {
-			*language = l
-			return nil
-		}
-	}
-	return fmt.Errorf("string \"%v\" cannot be unmarshalled to an instance of type Language", s)
-}
-
-func containsLanguage(languages []Language, language Language) bool {
-	for _, l := range languages {
-		if l == language {
-			return true
-		}
-	}
-	return false
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 Peter M. Stahl pemistahl@gmail.com
+ * Copyright © 2021-present Peter M. Stahl pemistahl@gmail.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,14 +16,18 @@
 
 package lingua
 
-//go:generate stringer -type=IsoCode639_1
+import "strings"
+
 // IsoCode639_1 is the type used for enumerating the ISO 639-1 code
 // representations of the supported languages.
+//
+//go:generate stringer -type=IsoCode639_1
 type IsoCode639_1 int
 
-//go:generate stringer -type=IsoCode639_3
 // IsoCode639_3 is the type used for enumerating the ISO 639-3 code
 // representations of the supported languages.
+//
+//go:generate stringer -type=IsoCode639_3
 type IsoCode639_3 int
 
 const (
@@ -485,3 +489,35 @@ const (
 	// UnknownIsoCode639_3 is the ISO 639-3 code for Unknown.
 	UnknownIsoCode639_3
 )
+
+// GetIsoCode639_1FromValue returns the ISO 639-1 code for the given name.
+func GetIsoCode639_1FromValue(name string) IsoCode639_1 {
+	if isoCodeEnum, ok := stringToIsoCode639_1[strings.ToLower(name)]; ok {
+		return isoCodeEnum
+	}
+	return UnknownIsoCode639_1
+}
+
+// GetIsoCode639_3FromValue returns the ISO 639-3 code for the given name.
+func GetIsoCode639_3FromValue(name string) IsoCode639_3 {
+	if isoCodeEnum, ok := stringToIsoCode639_3[strings.ToLower(name)]; ok {
+		return isoCodeEnum
+	}
+	return UnknownIsoCode639_3
+}
+
+var stringToIsoCode639_1 = func() map[string]IsoCode639_1 {
+	m := make(map[string]IsoCode639_1)
+	for isoCode := AF; isoCode <= ZU; isoCode++ {
+		m[strings.ToLower(isoCode.String())] = isoCode
+	}
+	return m
+}()
+
+var stringToIsoCode639_3 = func() map[string]IsoCode639_3 {
+	m := make(map[string]IsoCode639_3)
+	for isoCode := AFR; isoCode <= ZUL; isoCode++ {
+		m[strings.ToLower(isoCode.String())] = isoCode
+	}
+	return m
+}()

@@ -1,3 +1,123 @@
+## Lingua 1.4.0 (released on 05 Sep 2023)
+
+### Features
+
+- The new functions `GetIsoCode639_1FromValue()` and `GetIsoCode639_3FromValue()`
+  have been introduced to return the proper `IsoCode639_1` and `IsoCode639_3` for
+  a given name string. (#44)
+
+### Changes
+
+- The functions `GetLanguageFromIsoCode639_1()` and `GetLanguageFromIsoCode639_3()`
+  now correctly return `Unknown` instead of `-1` if a language cannot be found for the
+  given iso code. (#44)
+
+### Bug Fixes
+
+- The method `LanguageDetector.DetectMultipleLanguagesOf()` returned wrong values for
+  start and end indices for texts consisting of only a single word. This has been fixed. (#43)
+
+## Lingua 1.3.4 (released on 09 Jun 2023)
+
+### Bug Fixes
+
+- When trying to detect multiple languages in a text consisting of only a
+  single word, a panic occurred. This has been fixed. (#41)
+
+## Lingua 1.3.3 (released on 03 Feb 2023)
+
+### Bug Fixes
+
+- For long input texts, a panic occurred while computing the confidence
+  values due to an accidental division by zero. This has been fixed. (#27)
+
+## Lingua 1.3.2 (released on 30 Jan 2023)
+
+### Improvements
+
+- After applying some internal optimizations, language detection is now
+  faster, at least between 20% and 30%, approximately. For long input texts,
+  the speed improvement is greater than for short input texts.
+
+## Lingua 1.3.1 (released on 08 Jan 2023)
+
+### Bug Fixes
+
+- For long input texts, an error occurred while computing the confidence 
+  values due to numerical underflow when converting probabilities. 
+  This has been fixed.
+
+## Lingua 1.3.0 (released on 01 Jan 2023)
+
+### Improvements
+
+- The min-max normalization method for the confidence values has been
+  replaced with applying the softmax function. This gives more realistic
+  probabilities. (#25)
+
+## Lingua 1.2.2 (released on 27 Dec 2022)
+
+### Bug Fixes
+
+- Under certain circumstances, calling the method
+  `LanguageDetector.DetectMultipleLanguagesOf()` caused an index error.
+  This has been fixed.
+
+## Lingua 1.2.1 (released on 13 Dec 2022)
+
+### Bug Fixes
+
+- A misconfiguration in a `go.mod` file caused errors when trying to download
+  the library via the `go get` command. This has been fixed. (#23)
+
+## Lingua 1.2.0 (released on 12 Dec 2022)
+
+### Features
+
+- The new method `LanguageDetector.DetectMultipleLanguagesOf()` has been
+  introduced. It allows to detect multiple languages in mixed-language text. (#9)
+
+## Lingua 1.1.1 (released on 22 Nov 2022)
+
+### Documentation
+
+- Some documentation mistakes have been fixed and missing information has been added.
+
+## Lingua 1.1.0 (released on 21 Nov 2022)
+
+### Features
+
+- The new method `LanguageDetectorBuilder.WithLowAccuracyMode()` has been
+  introduced. By activating it, detection accuracy for short text is reduced 
+  in favor of a smaller memory footprint and faster detection performance. (#17)
+
+- The new method `LanguageDetector.ComputeLanguageConfidence()` has been
+  introduced. It allows to retrieve the confidence value for one specific
+  language only, given the input text. (#19)
+
+### Improvements
+
+- The computation of the confidence values has been revised and the min-max
+  normalization algorithm is now applied to the values, making them better
+  comparable by behaving more like real probabilities. (#16)
+
+- The language models are now serialized as protocol buffers instead of json.
+  Thanks to this change, they are now loaded into memory twice as fast as before. (#22)
+
+### Bug Fixes
+
+- The unigram counts in the statistics engine were not retrieved correctly.
+  This has been fixed, producing more correct detection results. (#14)
+
+### Compatibility
+
+- The lowest supported Go version is 1.18 now. Older versions are no longer
+  compatible with this library.
+
+### Miscellaneous
+
+- The library now has a fresh and colorful new logo. Why? Well, why not? (-:
+
 ## Lingua 1.0.5 (released on 25 Dec 2021)
 
 ### Bug Fixes

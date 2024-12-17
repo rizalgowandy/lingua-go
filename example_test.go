@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 Peter M. Stahl pemistahl@gmail.com
+ * Copyright © 2021-present Peter M. Stahl pemistahl@gmail.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,6 +40,31 @@ func Example_basic() {
 	// Output: English
 }
 
+func Example_multipleLanguagesDetection() {
+	languages := []lingua.Language{
+		lingua.English,
+		lingua.French,
+		lingua.German,
+	}
+
+	detector := lingua.NewLanguageDetectorBuilder().
+		FromLanguages(languages...).
+		Build()
+
+	sentence := "Parlez-vous français? " +
+		"Ich spreche Französisch nur ein bisschen. " +
+		"A little bit is better than nothing."
+
+	for _, result := range detector.DetectMultipleLanguagesOf(sentence) {
+		fmt.Printf("%s: '%s'\n", result.Language(), sentence[result.StartIndex():result.EndIndex()])
+	}
+
+	// Output:
+	// French: 'Parlez-vous français? '
+	// German: 'Ich spreche Französisch nur ein bisschen. '
+	// English: 'A little bit is better than nothing.'
+}
+
 // By default, Lingua returns the most likely language for a given input text.
 // However, there are certain words that are spelled the same in more than one
 // language. The word `prologue`, for instance, is both a valid English and
@@ -64,7 +89,7 @@ func Example_minimumRelativeDistance() {
 
 	detector := lingua.NewLanguageDetectorBuilder().
 		FromLanguages(languages...).
-		WithMinimumRelativeDistance(0.25).
+		WithMinimumRelativeDistance(0.9).
 		Build()
 
 	language, exists := detector.DetectLanguageOf("languages are awesome")
@@ -80,22 +105,13 @@ func Example_minimumRelativeDistance() {
 // Knowing about the most likely language is nice but how reliable is the
 // computed likelihood? And how less likely are the other examined languages in
 // comparison to the most likely one? In the example below, a slice of
-// ConfidenceValue is returned containing all possible languages sorted by their
-// confidence value in descending order. The values that this method computes are
-// part of a relative confidence metric, not of an absolute one. Each value is a
-// number between 0.0 and 1.0. The most likely language is always returned with
-// value 1.0. All other languages get values assigned which are lower than 1.0,
-// denoting how less likely those languages are in comparison to the most likely
-// language.
-//
-// The slice returned by this method does not necessarily contain all
-// languages which the calling instance of LanguageDetector was built from.
-// If the rule-based engine decides that a specific language is truly
-// impossible, then it will not be part of the returned slice. Likewise,
-// if no ngram probabilities can be found within the detector's languages
-// for the given input text, the returned slice will be empty.
-// The confidence value for each language not being part of the returned
-// slice is assumed to be 0.0.
+// ConfidenceValue is returned containing those languages which the calling
+// instance of LanguageDetector has been built from. The entries are sorted by
+// their confidence value in descending order. Each value is a probability
+// between 0.0 and 1.0. The probabilities of all languages will sum to 1.0.
+// If the language is unambiguously identified by the rule engine, the value 1.0
+// will always be returned for this language. The other languages will receive a
+// value of 0.0.
 func Example_confidenceValues() {
 	languages := []lingua.Language{
 		lingua.English,
@@ -115,10 +131,10 @@ func Example_confidenceValues() {
 	}
 
 	// Output:
-	// English: 1.00
-	// French: 0.79
-	// German: 0.75
-	// Spanish: 0.72
+	// English: 0.93
+	// French: 0.04
+	// German: 0.02
+	// Spanish: 0.01
 }
 
 // By default, Lingua uses lazy-loading to load only those language models on
@@ -140,13 +156,10 @@ func Example_eagerLoading() {
 // can become better in such cases if you exclude certain languages from the
 // decision process or just explicitly include relevant languages.
 func Example_builderApi() {
-	// Including all languages available in the library
-	// consumes at least 2GB of memory and might
-	// lead to slow runtime performance.
+	// Include all languages available in the library.
 	lingua.NewLanguageDetectorBuilder().FromAllLanguages()
 
-	// Include only languages that are not yet extinct
-	// (= currently excludes Latin).
+	// Include only languages that are not yet extinct (= currently excludes Latin).
 	lingua.NewLanguageDetectorBuilder().FromAllSpokenLanguages()
 
 	// Include only languages written with Cyrillic script.

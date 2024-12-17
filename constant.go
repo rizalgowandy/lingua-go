@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 Peter M. Stahl pemistahl@gmail.com
+ * Copyright © 2021-present Peter M. Stahl pemistahl@gmail.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,13 +20,13 @@ import "regexp"
 
 const maxNgramLength = 5
 
-var japaneseCharacterSet = regexp.MustCompile("^[\\p{Hiragana}\\p{Katakana}\\p{Han}]+$")
-var letter = regexp.MustCompile("^\\p{L}+$")
-var multipleWhitespace = regexp.MustCompile("\\s+")
-var noLetter = regexp.MustCompile("^[^\\p{L}]+$")
-var numbers = regexp.MustCompile("\\p{N}")
-var punctuation = regexp.MustCompile("\\p{P}")
-var languagesSupportingLogograms = []Language{Chinese, Japanese, Korean}
+var japaneseCharacterSet = regexp.MustCompile(`^[\p{Hiragana}\p{Katakana}\p{Han}]+$`)
+var multipleWhitespace = regexp.MustCompile(`\s+`)
+var numbers = regexp.MustCompile(`\p{N}`)
+var punctuation = regexp.MustCompile(`\p{P}`)
+var letters = regexp.MustCompile(`\p{Han}|\p{Hangul}|\p{Hiragana}|\p{Katakana}|\p{L}+`)
+var tokensWithOptionalWhitespace = regexp.MustCompile(`\s*(?:\p{Han}|\p{Hangul}|\p{Hiragana}|\p{Katakana}|[\p{L}'-]+)[\p{N}\p{P}]*\s*`)
+var tokensWithoutWhitespace = regexp.MustCompile(`\p{Han}|\p{Hangul}|\p{Hiragana}|\p{Katakana}|\p{L}+`)
 
 var charsToLanguagesMapping = map[string][]Language{
 	"Ãã":     {Portuguese, Vietnamese},
